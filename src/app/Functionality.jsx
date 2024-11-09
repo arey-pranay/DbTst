@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import * as XLSX from "xlsx"; // Importing the xlsx library
+import * as XLSX from "xlsx";
 
 const Functionality = () => {
   const [userDetails, setUserDetails] = useState({
@@ -187,6 +187,10 @@ const Functionality = () => {
   };
 
   const handleRecipeRecommendation = () => {
+    setRecipe(`
+      <br><strong>Loading your customized recipe in a moment 😋</strong><br>
+    `);
+
     // Split the input ingredients and clean the array
     const inputIngredients = ingredients
       .split(",")
@@ -213,16 +217,15 @@ const Functionality = () => {
          <br> <strong>${recipe.name}</strong><br> <br>
           Ingredients: ${recipe.ingredients.join(", ")}<br><br>
           Instructions: ${recipe.instructions}<br><br>
-          <a href="${
-            recipe.url
-          }" target="_blank" className="underline">Click here to know more</a><br> <br>
+      
           <img src="${recipe.imageUrl}" alt="${recipe.name}" style="width:100%">
         `;
         break;
       }
     }
-
-    setRecipe(recommendedRecipe);
+    setTimeout(() => {
+      setRecipe(recommendedRecipe);
+    }, Math.random() * 4000);
   };
 
   const handleFocus = (name) => {
@@ -244,11 +247,9 @@ const Functionality = () => {
           {Object.entries(userDetails).map(([key, value], index) => (
             <div key={key}>
               <div className="flex gap-1 items-center mb-1">
-                <label className="block text-gray-700 capitalize ">
-                  {/* {emojis[index][0]} */}
-                  {key}
-                </label>
+                <label className="block text-gray-700 capitalize ">{key}</label>
                 {emojis[index][1]}
+                {emojis[index][0]}
               </div>
 
               {key === "gender" ? (

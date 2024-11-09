@@ -61,8 +61,9 @@ const HomePage = () => {
           <div className="sm:w-full md:w-3/5 flex flex-col relative z-20">
             <div className="group h-2 flex items-center gap-40 mb-12 ">
               <div className="w-20 h-full bg-gray-800 dark:bg-white hover:w-40 transition-all hover:scale-x-150 hover:translate-x-12 duration-500"></div>
-              <div className="text-[0rem]   group-hover:text-[0.5rem] font-bold transition-all delay-500 text-lime-500">
-                A Pranay Parikh Product
+              <div className="text-[0rem]   group-hover:text-sm font-bold transition-all delay-500 text-lime-500">
+                {/* A Pranay Parikh Product */}
+                By Nitya and Sreelasya
               </div>
             </div>
             <h1 className="font-bebas-neue uppercase text-3xl sm:text-5xl font-black flex flex-col leading-none dark:text-white text-gray-800 mb-4">
