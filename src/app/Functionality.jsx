@@ -218,8 +218,11 @@ const Functionality = () => {
           Ingredients: ${recipe.ingredients.join(", ")}<br><br>
           Instructions: ${recipe.instructions}<br><br>
       
-          <img src="${recipe.imageUrl}" alt="${recipe.name}" style="width:100%">
         `;
+        {
+          /*<img src="${recipe.imageUrl}" alt="${recipe.name}" style="width:100%">*/
+        }
+
         break;
       }
     }

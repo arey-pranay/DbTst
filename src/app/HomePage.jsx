@@ -1,9 +1,43 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const HomePage = () => {
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Check for user's system preference or local storage setting
+  useEffect(() => {
+    const userPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+    const savedMode = localStorage.getItem("darkMode");
+
+    // If a saved preference exists, use it; otherwise, check system preference
+    if (savedMode) {
+      setDarkMode(savedMode === "true");
+    } else {
+      setDarkMode(userPrefersDark);
+    }
+  }, []);
+
+  // Apply the dark class to <html> or <body> whenever darkMode changes
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("darkMode", "true"); // Save user preference
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("darkMode", "false");
+    }
+  }, [darkMode]);
+
+  // Toggle dark mode on button click
+  const toggleDarkMode = () => {
+    setDarkMode((prevMode) => !prevMode);
+  };
+
+  // Handle the smooth scroll to the Features section
   const scrollToFeatures = (event) => {
-    event.preventDefault(); // Prevent default anchor behavior
+    event.preventDefault();
     window.scrollBy({
       top: window.innerHeight, // Scroll down by the height of the viewport (100vh)
       behavior: "smooth", // Enable smooth scrolling
@@ -28,24 +62,12 @@ const HomePage = () => {
               >
                 Features
               </div>
-              {/* <a
-                href="#"
-                className="py-2 px-6 flex hover:opacity-70 hover:text-lime-700"
+              <button
+                onClick={toggleDarkMode}
+                className="absolute bottom-8 right-8 p-3 bg-lime-500 text-white rounded-full transition-all duration-300 hover:bg-lime-400"
               >
-                Product
-              </a>
-              <a
-                href="#"
-                className="py-2 px-6 flex hover:opacity-70 hover:text-lime-700"
-              >
-                Contact
-              </a>
-              <a
-                href="#"
-                className="py-2 px-6 flex hover:opacity-70 hover:text-lime-700"
-              >
-                Career
-              </a> */}
+                {darkMode ? "🌙" : "🌞"}
+              </button>
             </nav>
             <button className="lg:hidden flex flex-col ml-4">
               <span className="w-6 h-1 bg-gray-800 dark:bg-white mb-1"></span>
@@ -59,22 +81,22 @@ const HomePage = () => {
       <div className="bg-white dark:bg-gray-800 flex flex-col md:flex-row relative z-20 items-center overflow-hidden">
         <div className="container mx-auto px-6 flex flex-col sm:flex-row relative py-6">
           <div className="sm:w-full md:w-3/5 flex flex-col relative z-20">
-            <div className="group h-2 flex items-center gap-40 mb-12 ">
+            <div className="group h-2 flex items-center gap-40 mb-12">
               <div className="w-20 h-full bg-gray-800 dark:bg-white hover:w-40 transition-all hover:scale-x-150 hover:translate-x-12 duration-500"></div>
-              <div className="text-[0rem]   group-hover:text-sm font-bold transition-all delay-500 text-lime-500">
+              <div className="text-[0rem] group-hover:text-sm font-bold transition-all delay-500 text-lime-500">
                 {/* A Pranay Parikh Product */}
                 By Nitya and Sreelasya
               </div>
             </div>
             <h1 className="font-bebas-neue uppercase text-3xl sm:text-5xl font-black flex flex-col leading-none dark:text-white text-gray-800 mb-4">
-              Don&apos;t let your <br />{" "}
-              <span className="text-lime-600  transition-all duration-500 hover:tracking-widest">
+              Don&apos;t let your <br />
+              <span className="text-lime-600 transition-all duration-500 hover:tracking-widest">
                 Diabetes
               </span>
               <span className="text-2xl sm:text-4xl my-4">
                 {" "}
                 stop you From eating <br />{" "}
-                <span className="text-lime-500  transition-all duration-500 hover:tracking-widest">
+                <span className="text-lime-500 transition-all duration-500 hover:tracking-widest">
                   Tasty
                 </span>
               </span>
@@ -111,6 +133,8 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Dark Mode Toggle Button */}
     </main>
   );
 };
