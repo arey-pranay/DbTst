@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import * as XLSX from "xlsx"; // Importing the xlsx library
 
 const Functionality = () => {
   const [userDetails, setUserDetails] = useState({
@@ -73,7 +74,55 @@ const Functionality = () => {
   const [ingredients, setIngredients] = useState("");
   const [recipe, setRecipe] = useState("");
   const [focusedField, setFocusedField] = useState("");
+  const [recipes, setRecipes] = useState([]); // State to hold recipes loaded from Excel
+  const [disscoScore, setDisscoScore] = useState(null); // State to store the DissCo score
 
+  useEffect(() => {
+    const fetchAndParseExcel = async () => {
+      try {
+        // Fetch the Excel file from the public folder
+        const response = await fetch("./Cleaned_Indian_Food_Dataset.xlsx");
+        const arrayBuffer = await response.arrayBuffer();
+
+        // Parse the Excel file
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+
+        // Log the sheet names to verify we are accessing the right sheet
+        console.log("Sheet Names: ", workbook.SheetNames);
+
+        // Assuming the first sheet has the data (you can adjust this if needed)
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        // Log the raw sheet data to inspect its structure
+        console.log("Raw Sheet Data: ", sheet);
+
+        // Convert the sheet to JSON format
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+        // Log the JSON data to check if it’s being parsed correctly
+        console.log("Parsed JSON Data: ", jsonData);
+
+        // Format the data to match your recipe structure
+        const formattedRecipes = jsonData.map((row) => ({
+          name: row["TranslatedRecipeName"], // Assuming column names from Excel
+          ingredients: row["Cleaned-Ingredients"]
+            .split(",")
+            .map((ingredient) => ingredient.trim()),
+          instructions: row["TranslatedInstructions"],
+          url: row["URL"],
+          imageUrl: row["image-url"],
+        }));
+
+        // Update state with parsed recipes
+        setRecipes(formattedRecipes);
+      } catch (error) {
+        console.error("Error fetching or parsing the Excel file:", error);
+      }
+    };
+
+    fetchAndParseExcel();
+  }, []); // Run once when the component mounts
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUserDetails((prevState) => ({
@@ -81,13 +130,99 @@ const Functionality = () => {
       [name]: value,
     }));
   };
+  const calculateDissCo = (age, gender, hba1c, conditions) => {
+    // Gender factor
+    const genderFactor = gender.toLowerCase() === "female" ? 1.4 : 1.0;
 
+    // Base HDF score
+    let hdf = 1.0;
+
+    // Define condition impacts
+    const conditionImpacts = {
+      hypertension: 0.5,
+      cardiomyopathy: 1,
+      pericardial_disease: 1,
+      myocarditis: 1,
+      coronary_heart_disease: 1,
+      peripheral_vascular_disease: 2,
+      stent_or_bypass: 3,
+    };
+
+    // Add factors for each present condition
+    conditions.forEach((condition) => {
+      hdf += conditionImpacts[condition.toLowerCase()] || 0; // Ignore unrecognized conditions
+    });
+
+    // Calculate raw DissCo score
+    const disscoScore = (age / 10 + hba1c) * genderFactor * hdf;
+
+    // Normalize the score (max possible score is 34.3)
+    const maxScore = 34.3;
+    const normalizedDissco = disscoScore / maxScore;
+
+    return normalizedDissco;
+  };
+  const calculateAndDisplayDisscoScore = () => {
+    const { age, gender, hbA1C, hypertension, heartDisease } = userDetails;
+    if (!age || !gender || !hbA1C || !hypertension || !heartDisease) {
+      alert("Please fill in all details.");
+      return;
+    }
+
+    const conditions = [];
+    if (hypertension === "Yes") conditions.push("hypertension");
+    if (heartDisease && heartDisease !== "None")
+      conditions.push(heartDisease.toLowerCase());
+
+    const score = calculateDissCo(
+      Number(age),
+      gender,
+      Number(hbA1C),
+      conditions
+    );
+    setDisscoScore(score);
+  };
   const handleIngredientChange = (e) => {
     setIngredients(e.target.value);
   };
 
   const handleRecipeRecommendation = () => {
-    setRecipe(`Recommended recipe based on ingredients: ${ingredients}`);
+    // Split the input ingredients and clean the array
+    const inputIngredients = ingredients
+      .split(",")
+      .map((ingredient) => ingredient.trim().toLowerCase());
+    console.log(inputIngredients);
+
+    // Find a recipe that matches the top 3 ingredients
+    console.log(recipes);
+    let recommendedRecipe = "No recipe found for these ingredients.";
+    for (const recipe of recipes) {
+      const recipeIngredients = recipe.ingredients.map((ingredient) =>
+        ingredient.toLowerCase()
+      );
+
+      // Check if all three ingredients are in the recipe
+      const matchCount = inputIngredients.filter((ingredient) =>
+        recipeIngredients.includes(ingredient)
+      ).length;
+      console.log(inputIngredients);
+      console.log(recipeIngredients);
+      console.log(matchCount);
+      if (matchCount >= 3) {
+        recommendedRecipe = `
+         <br> <strong>${recipe.name}</strong><br> <br>
+          Ingredients: ${recipe.ingredients.join(", ")}<br><br>
+          Instructions: ${recipe.instructions}<br><br>
+          <a href="${
+            recipe.url
+          }" target="_blank" className="underline">Click here to know more</a><br> <br>
+          <img src="${recipe.imageUrl}" alt="${recipe.name}" style="width:100%">
+        `;
+        break;
+      }
+    }
+
+    setRecipe(recommendedRecipe);
   };
 
   const handleFocus = (name) => {
@@ -230,6 +365,17 @@ const Functionality = () => {
             </div>
           ))}
         </div>
+        <button
+          onClick={calculateAndDisplayDisscoScore}
+          className="mt-4 bg-lime-600 text-white px-4 py-2 rounded-md hover:bg-lime-700 w-full"
+        >
+          Calculate DissCo Score
+        </button>
+        {disscoScore !== null && (
+          <div className="mt-4 text-center text-xl">
+            <strong>DissCo Score:</strong> {disscoScore.toFixed(2)}
+          </div>
+        )}
       </div>
 
       <div className="w-full md:w-3/5 p-8 bg-white rounded-xl shadow-lg space-y-6 overflow-y-scroll  hover:border-8 border-lime-200 transition-all duration-100">
@@ -266,9 +412,13 @@ const Functionality = () => {
             <h3 className="text-xl font-bold text-gray-700">
               Recommended Recipe
             </h3>
-            <p className="text-gray-700">
+            {/* <p className="text-gray-700">
               {recipe || "Recipe will appear here..."}
-            </p>
+            </p> */}
+            <div
+              className="text-gray-700"
+              dangerouslySetInnerHTML={{ __html: recipe }}
+            />
           </div>
         </div>
       </div>
